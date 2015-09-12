@@ -1,7 +1,7 @@
 #include <iostream>
 #include <stdlib.h>
 
-int range_random(unsigned int low, unsigned int high){
+unsigned int range_random(unsigned int low, unsigned int high){
 	if(high >= low){
 		return (random() % (high - low + 1)) + low; // single thr only
 	}
