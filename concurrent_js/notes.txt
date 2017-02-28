@@ -11,3 +11,10 @@ https://www.w3.org/TR/html5/webappapis.html : Mentions that the event firing has
 
 https://www.w3.org/TR/workers/ : Web workers are supposed to spawn new threads at the OS level. They have separate event loop, stack, message queue and an execution environment. The only way to communicate with the worker threads is through passing messages, which appearis to be as clean an interface as an inter-process communication has. Web workers have to be loaded off the same origin web server and cannot access the DOM, document, window objects.
 
+
+Results:
+
+Using a 4 core CPU, and a matrix size of 1000*1000, the matrix multiplication showed a clock time speedup of 74%!
+The pesky problem with Chrome while running the web worker code is not resolved. We need to use another browser/Safari. Chrome just refuses to load the web worker script when not using a proper domain (such as when using file:// ).
+
+
