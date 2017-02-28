@@ -1,0 +1,95 @@
+<html>
+<body>
+<textarea id="log" rows="4" cols="200"></textarea>
+<script type="text/javascript">
+    var l = document.getElementById('log');
+    var testSize = 1000;
+
+    var gen2D = function(rows, cols){
+      var res = new Array(rows);
+      for(var x = 0; x < rows; ++x){
+        res[x] = new Array(cols);
+        for(var v = 0; v < cols; ++v){
+          res[x][v] = Math.floor(Math.random() * 10);
+        }
+      }
+      return res;
+    };
+
+    var validateArrays = function(arr1, arr2){
+      var rows1 = arr1.length;
+      var rows2 = arr2.length;
+      if(rows1 < 1 || rows2 < 1){
+        alert('Bad Args ! row sizes empty, exiting');
+        return;
+      }
+      var cols1 = arr1[0].length;
+      var cols2 = arr2[0].length;
+      if(cols1 != rows2){
+        alert('Bad Args ! Cannot multiply with matrix dimensions, exiting');
+        return;
+      }
+      return {
+        rows1: rows1,
+        cols1: cols1,
+        rows2: rows2,
+        cols2: cols2
+      };
+    };
+
+    var print2D = function(arr, msg){
+      var str = '';
+      str += msg + '\n';
+      for(var x = 0; x < arr.length; ++x){
+        for(var y = 0; y < arr[0].length; ++y){
+          str += arr[x][y] + ' ';
+        }
+        str += '\n';
+      }
+      l.value += str + '\n---------------------\n';
+    };
+
+    var multiplier = function(sc, arr1, arr2){
+      var res = new Array(sc.rows1);
+      res.map(function(oneRow){
+        oneRow = new Array(sc.cols2);
+      });
+
+      var res = gen2D(sc.rows1, sc.cols2);
+      for(var x = 0; x < sc.rows1; ++x){
+        for(var y = 0; y < sc.cols2; ++y){
+          res[x][y] = 0;
+          for(var z = 0; z < sc.cols1; ++z){
+            res[x][y] += arr1[x][z] * arr2[z][y];
+          }
+        }
+      }
+      return res;
+    };
+
+    var computeMult = function(size){
+      var arr1 = gen2D(size, size);
+      //print2D(arr1, 'First array : ');
+
+      var arr2 = gen2D(size, size);
+      //print2D(arr2, 'Second array : ');
+
+      var sc = validateArrays(arr1, arr2);
+      if(!sc)
+        return;
+
+      var before = new Date();
+      var result = multiplier(sc, arr1, arr2);
+      var after = new Date();
+
+      if(result){
+      	//print2D(result, 'Result array : Compute time(seconds) = ' + ((after - before) / 1000));
+      	l.value += 'Result array : Compute time(seconds) = ' + ((after - before) / 1000);
+      }
+    };
+
+    computeMult(testSize);
+</script>
+</body>
+</html>
+

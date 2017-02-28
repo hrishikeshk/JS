@@ -1,0 +1,189 @@
+<html>
+<body>
+<textarea id="log" rows="40" cols="200"></textarea>
+<script src="http://cdn.jsdelivr.net/ramda/latest/ramda.min.js"></script>
+<script type="text/javascript">
+    var l = document.getElementById('log');
+    var testSize = 1000; 
+    var coresToUse = 4; 
+
+    var completedParts = 0;
+    var finalResult = new Array(coresToUse);
+
+    var startTime;
+
+    var gen2D = function(rows, cols){
+      var res = new Array(rows);
+      for(var x = 0; x < rows; ++x){
+        res[x] = new Array(cols);
+        for(var v = 0; v < cols; ++v){
+          res[x][v] = Math.floor(Math.random() * 10);
+        }
+      }
+      return res;
+    };
+
+    var validateArrays = function(arr1, arr2){
+      var rows1 = arr1.length;
+      var rows2 = arr2.length;
+      if(rows1 < 1 || rows2 < 1){
+        alert('Bad Args ! row sizes empty, exiting');
+        return;
+      }
+      var cols1 = arr1[0].length;
+      var cols2 = arr2[0].length;
+      if(cols1 != rows2){
+        alert('Bad Args ! Cannot multiply with matrix dimensions, exiting');
+        return;
+      }
+      return {
+        rows1: rows1,
+        cols1: cols1,
+        rows2: rows2,
+        cols2: cols2
+      };
+    };
+
+    var print2D = function(arr, msg){
+      var str = '';
+      str += msg + '\n';
+      for(var x = 0; x < arr.length; ++x){
+        for(var y = 0; y < arr[0].length; ++y){
+          str += arr[x][y] + ' ';
+        }
+        str += '\n';
+      }
+      l.value += str + '\n---------------------\n';
+    };
+
+    var multiplier = function(sc, arr1, arr2){
+      var res = new Array(sc.rows1);
+      res.map(function(oneRow){
+        oneRow = new Array(sc.cols2);
+      });
+
+      var taskSize = sc.toRow - sc.fromRow + 1;
+      var tx = 0;
+      var res = gen2D(sc.toRow - sc.fromRow + 1, sc.cols2);
+      for(var x = sc.fromRow; x <= sc.toRow; ++x){
+        for(var y = 0; y < sc.cols2; ++y){
+          res[tx][y] = 0;
+          for(var z = 0; z < sc.cols1; ++z){
+            res[tx][y] += arr1[x][z] * arr2[z][y];
+          }
+        }
+        ++tx;
+      }
+      return res;
+    };
+
+   var multByPart = function(sc, arr1, arr2){
+      var before = new Date();
+      var result = multiplier(sc, arr1, arr2);
+      var after = new Date();
+
+      if(result){
+      	//print2D(result, 'Result array : Compute time(seconds) = ' + ((after - before) / 1000));
+      	l.value += 'Result array : Compute time(seconds) = ' + ((after - before) / 1000);
+      }
+      return result;
+   };
+
+   var splitRange = function(size, numParts){
+     var partSize = Math.round(size / numParts);
+     var ranges = new Array();
+     var low = 0;
+     var high = partSize - 1;
+     for(var p = 0; p < numParts - 1; ++p){
+       ranges.push([low, high]);
+       low = high + 1;
+       high = low + partSize - 1;
+     }
+     ranges.push([low, size - 1]);
+     return ranges;
+   };
+   
+  var partResultHandler = function(partialResult){
+    var intData = partialResult.data;
+    finalResult[intData.id] = intData.val;
+    ++completedParts;
+    if(completedParts == finalResult.length){
+      var elapsedTime = new Date().valueOf() - startTime.valueOf();
+      l.value += 'Final Array, computed in:' + elapsedTime / 1000 + '\n';
+      //print2D(finalResult, 'Final Array, computed in:' + elapsedTime / 1000 + ', result: ');
+      /*
+      R.map(
+        function(arr2D){
+          print2D(arr2D, '');
+        },
+        finalResult
+      );
+      */
+    }
+    //console.log(intData);
+    //print2D(intData[intData.id], 'Part result for id: ' + intData.id);
+  }
+
+  var computeMult = function(size, numCores){
+    var arr1 = gen2D(size, size);
+    //print2D(arr1, 'First array : ');
+
+    var arr2 = gen2D(size, size);
+    //print2D(arr2, 'Second array : ');
+
+    var sc = validateArrays(arr1, arr2);
+    if(!sc)
+      return;
+
+    var rangesArr = splitRange(size, numCores);
+
+    var wwArr = new Array(numCores);
+    for(var x = 0; x < numCores; ++x){
+      wwArr[x] = new Worker('worker.js');
+      wwArr[x].onmessage = partResultHandler
+    }
+
+    var zipped = R.zip(rangesArr, wwArr);
+
+    startTime = new Date();
+
+    R.mapAccum(function(accum, arrRangeWW){
+      sc['fromRow'] = arrRangeWW[0][0];
+      sc['toRow'] = arrRangeWW[0][1];
+      arrRangeWW[1].postMessage(
+        {
+          id: accum,
+          sc: sc,
+          arr1: arr1,
+          arr2: arr2 
+        }
+      );
+      return [accum + 1, accum];
+    }, 0, zipped);
+
+/*
+    var accumResult = new Array();
+    rangesArr.map(
+      function(oneRange){
+        sc['fromRow'] = oneRange[0];
+        sc['toRow'] = oneRange[1];
+
+        accumResult.push(multByPart(sc, arr1, arr2) );
+      }
+    )
+    return accumResult.reduce(
+      function(accum, currentArr){
+        return accum.concat(currentArr);
+      }
+    );
+*/
+  };
+
+  computeMult(testSize, coresToUse);
+
+  //print2D(computeMult(testSize, coresToUse), 'Final arr: ');
+
+</script>
+</body>
+</html>
+

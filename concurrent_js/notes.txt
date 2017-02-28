@@ -1,0 +1,13 @@
+https://developer.mozilla.org/en/docs/Web/JavaScript/EventLoop
+- Explains JS Event Loop. Mentions that Web workers have a separate runtime, message queue and a stack and the only manner they can communicate with oteher web workers is through postMessage() invocations.
+
+
+
+http://stackoverflow.com/questions/2734025/is-javascript-guaranteed-to-be-single-threaded
+
+
+https://www.w3.org/TR/html5/webappapis.html : Mentions that the event firing has to be dispatched at the given target, that presumably occurs whenever some event is explicitly triggered as well.
+
+
+https://www.w3.org/TR/workers/ : Web workers are supposed to spawn new threads at the OS level. They have separate event loop, stack, message queue and an execution environment. The only way to communicate with the worker threads is through passing messages, which appearis to be as clean an interface as an inter-process communication has. Web workers have to be loaded off the same origin web server and cannot access the DOM, document, window objects.
+
